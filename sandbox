@@ -1,0 +1,88 @@
+#!/bin/bash
+
+function error() {
+    echo -e "$1"
+    exit 1
+}
+
+function usage() {
+    echo -e "Usage:"
+    echo -e "    \033[1;32msandbox\033[0;39m            ... Launch project (abbreviation)"
+    echo -e "    \033[1;32msandbox init\033[0;39m       ... Initial setup"
+    echo -e "    \033[1;32msandbox open\033[0;39m       ... Launch project"
+    echo -e "    \033[1;32msandbox reset\033[0;39m       ... Reset settings"
+}
+
+function init() {
+    if [ -e ./sandbox.conf ]; then
+        error "Run \`\033[1;32msandbox reset\033[0;39m\` to reset the configuration."
+    fi
+    echo -n "Project directory: "
+    read dir
+    expanded_dir="${dir/#\~/$HOME}"
+    if [ ! -e "$expanded_dir" ]; then
+        mkdir -p "$expanded_dir"
+        echo -e "Directory \033[1;32m'$dir'\033[0;39m has been created."
+    else
+        echo -e "\033[1;32m'$dir'\033[0;39m already exists."
+    fi
+    echo "dir='${dir}'" > ./sandbox.conf
+    echo -e "\033[1;34mInitial setup is completed.\033[0;39m"
+}
+
+function open() {
+    if [ ! -e ./sandbox.conf ]; then
+        error "Run \033[1;32msandbox init\033[0;39m to perform the initial setup."
+    fi
+    source ./sandbox.conf
+    expanded_dir="${dir/#\~/$HOME}"
+    cd "$expanded_dir"
+    
+    folders=($(find . -maxdepth 1 -type d | sort | sed '1d; s|^\./||'))
+
+
+    if [ ${#folders[@]} -eq 0 ]; then
+        error "There is no project."
+    fi
+
+
+    echo "Please select a project: "
+    for i in "${!folders[@]}"; do
+        echo "$((i+1))) ${folders[i]}"
+    done
+
+
+    read -p "Please enter number: " choice
+
+
+    if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#folders[@]}" ]; then
+        selected_folder="${folders[$((choice-1))]}"
+        
+        code "$selected_folder"
+        echo -e "\033[1;32mProject $selected_folder started in VSCode.\033[0;39m"
+    else
+        error "Invalid choice."
+    fi
+}
+
+function reset() {
+    if [ ! -e ./sandbox.conf ]; then
+        error "There is no \`\033[1;32mconfiguration file\033[0;39m\`."
+    fi
+    echo "Do you want to reset your settings? [Y/n]"
+    read answer
+    case $answer in
+        "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
+        * ) exit 1;;
+    esac
+    rm -f ./sandbox.conf
+    echo -e "\033[1;34mReset is completed.\033[0;39m"
+}
+
+case $1 in
+    usage ) usage ;;
+    init ) init ;;
+    open ) open ;;
+    reset ) reset ;;
+    * ) open ;;
+esac
