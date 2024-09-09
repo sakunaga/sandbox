@@ -2,6 +2,7 @@
 
 function error() {
     echo -e "$1"
+    usage
     exit 1
 }
 
@@ -79,6 +80,7 @@ function reset() {
     echo -e "\033[1;34mReset is completed.\033[0;39m"
 }
 
+cd `dirname $0`
 case $1 in
     usage ) usage ;;
     init ) init ;;

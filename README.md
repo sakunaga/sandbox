@@ -9,6 +9,6 @@ brew install sandbox
 
 ## Usage
 
-- `sandbox`: Launch Next.js project (abbreviation)
+- `sandbox`: Launch project (abbreviation)
 - `sandbox init`: Initial setup
-- `sandbox open`: Launch Next.js project
+- `sandbox open`: Launch project
