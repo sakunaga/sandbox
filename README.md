@@ -14,5 +14,6 @@ brew install sandbox
 - `sandbox update`: 設定を更新する
 - `sandbox open`: プロジェクトを開く
 - `sandbox info`: 設定情報を確認する
-- `sandbox upgrade`: 本体を更新する
 - `sandbox reset`: 設定をリセットする
+- `sandbox upgrade`: 本体を更新する
+- `sandbox uninstall`: 本体を削除する

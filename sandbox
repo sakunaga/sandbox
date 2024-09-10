@@ -13,8 +13,9 @@ function usage() {
     echo -e "    \033[1;32msandbox update\033[0;39m     ... 設定を更新する"
     echo -e "    \033[1;32msandbox open\033[0;39m       ... プロジェクトを開く"
     echo -e "    \033[1;32msandbox info\033[0;39m       ... 設定情報を確認する"
-    echo -e "    \033[1;32msandbox upgrade\033[0;39m      ... 本体を更新する"
     echo -e "    \033[1;32msandbox reset\033[0;39m      ... 設定をリセットする"
+    echo -e "    \033[1;32msandbox upgrade\033[0;39m      ... 本体を更新する"
+    echo -e "    \033[1;32msandbox uninstall\033[0;39m      ... 本体を削除する"
 }
 
 function info() {
@@ -25,7 +26,9 @@ function info() {
 
     source ./sandbox.conf
 
-    echo -e "作成時間: \033[1;32m$created\033[0;39m"
+    if [ -n "$created" ]; then
+        echo -e "作成時間: \033[1;32m$created\033[0;39m"
+    fi
     if [ -n "$updated" ]; then
         echo -e "最終更新時間: \033[1;32m$updated\033[0;39m"
     fi
@@ -80,7 +83,9 @@ function update() {
     fi
 
     # 設定ファイルの更新。createdは既存のものを保持しつつ、dirとupdatedを上書き
-    echo "created='${created}'" > ./sandbox.conf
+    if [ -n "$created" ]; then
+        echo "created='${created}'" > ./sandbox.conf
+    fi
     echo "updated='$(date)'" >> ./sandbox.conf
     echo "dir='${dir}'" >> ./sandbox.conf
 
@@ -157,8 +162,9 @@ function uninstall() {
     read answer02
     case $answer02 in
         "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
-        * ) brew uninstall sandbox; echo -e "👋 \033[1;34msandbox\033[0;39m を削除しました。"; exit 1;;
+        * ) rm -f ./sandbox.conf; brew uninstall sandbox; echo -e "👋 \033[1;34msandbox\033[0;39m を削除しました。"; exit 1;;
     esac
+    rm -f ./sandbox.conf
     brew uninstall sandbox
     brew untap sakunaga/sandbox
     echo -e "👋 \033[1;34msandbox\033[0;39m のご利用ありがとうございました！"
