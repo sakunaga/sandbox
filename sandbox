@@ -7,33 +7,93 @@ function error() {
 }
 
 function usage() {
-    echo -e "Usage:"
-    echo -e "    \033[1;32msandbox\033[0;39m            ... Launch project (abbreviation)"
-    echo -e "    \033[1;32msandbox init\033[0;39m       ... Initial setup"
-    echo -e "    \033[1;32msandbox open\033[0;39m       ... Launch project"
-    echo -e "    \033[1;32msandbox reset\033[0;39m       ... Reset settings"
+    echo -e "使用方法:"
+    echo -e "    \033[1;32msandbox\033[0;39m            ... プロジェクトを開く (省略形)"
+    echo -e "    \033[1;32msandbox init\033[0;39m       ... 初期設定"
+    echo -e "    \033[1;32msandbox update\033[0;39m     ... 設定を更新する"
+    echo -e "    \033[1;32msandbox open\033[0;39m       ... プロジェクトを開く"
+    echo -e "    \033[1;32msandbox info\033[0;39m       ... 設定情報を確認する"
+    echo -e "    \033[1;32msandbox upgrade\033[0;39m      ... 本体を更新する"
+    echo -e "    \033[1;32msandbox reset\033[0;39m      ... 設定をリセットする"
 }
+
+function info() {
+    if [ ! -e ./sandbox.conf ]; then
+        error "\033[1;32msandbox init\033[0;39m を実行して初期設定を行ってください。"
+        exit 1
+    fi
+
+    source ./sandbox.conf
+
+    echo -e "作成時間: \033[1;32m$created\033[0;39m"
+    if [ -n "$updated" ]; then
+        echo -e "最終更新時間: \033[1;32m$updated\033[0;39m"
+    fi
+    echo -e "プロジェクトディレクトリ: \033[1;32m$dir\033[0;39m"
+}
+
 
 function init() {
     if [ -e ./sandbox.conf ]; then
-        error "Run \`\033[1;32msandbox reset\033[0;39m\` to reset the configuration."
+        error "\033[1;32msandbox reset\033[0;39m を実行して設定をリセットしてください。"
     fi
-    echo -n "Project directory: "
+    echo -n "プロジェクトディレクトリ: "
     read dir
     expanded_dir="${dir/#\~/$HOME}"
     if [ ! -e "$expanded_dir" ]; then
         mkdir -p "$expanded_dir"
-        echo -e "Directory \033[1;32m'$dir'\033[0;39m has been created."
+        echo -e "ディレクトリ「\033[1;32m'$dir'\033[0;39m を作成しました。"
     else
-        echo -e "\033[1;32m'$dir'\033[0;39m already exists."
+        echo -e "\033[1;32m$dir\033[0;39m は既にに存在しています。"
     fi
-    echo "dir='${dir}'" > ./sandbox.conf
-    echo -e "\033[1;34mInitial setup is completed.\033[0;39m"
+    echo "created='$(date)'" > ./sandbox.conf
+    echo "dir='${dir}'" >> ./sandbox.conf
+    echo -e "\033[1;34m初期設定が完了しました。\033[0;39m"
 }
+
+function update() {
+    if [ ! -e ./sandbox.conf ]; then
+        error "\033[1;32msandbox init\033[0;39m を実行して初期設定を行ってください。"
+        exit 1
+    fi
+
+    echo "設定をアップデートしますか？ [Y/n]"
+    read answer
+    case $answer in
+        "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
+        * ) exit 1;;
+    esac
+
+    # 既存の設定ファイルを読み込む
+    source ./sandbox.conf
+
+    echo -e "現在のプロジェクトディレクトリ: \033[1;32m$dir\033[0;39m"
+    echo -n "新しいプロジェクトディレクトリ: "
+    read dir
+    expanded_dir="${dir/#\~/$HOME}"
+
+    if [ ! -e "$expanded_dir" ]; then
+        mkdir -p "$expanded_dir"
+        echo -e "ディレクトリ「\033[1;32m'$dir'\033[0;39m 」を作成しました。"
+    else
+        echo -e "\033[1;32m$dir\033[0;39m は既に存在しています。"
+    fi
+
+    # 設定ファイルの更新。createdは既存のものを保持しつつ、dirとupdatedを上書き
+    echo "created='${created}'" > ./sandbox.conf
+    echo "updated='$(date)'" >> ./sandbox.conf
+    echo "dir='${dir}'" >> ./sandbox.conf
+
+    echo -e "\033[1;34m設定のアップデートが完了しました。\033[0;39m"
+}
+
+
+
+
 
 function open() {
     if [ ! -e ./sandbox.conf ]; then
-        error "Run \033[1;32msandbox init\033[0;39m to perform the initial setup."
+        error "\033[1;32msandbox init\033[0;39m を実行して初期設定を行ってください。"
     fi
     source ./sandbox.conf
     expanded_dir="${dir/#\~/$HOME}"
@@ -43,48 +103,76 @@ function open() {
 
 
     if [ ${#folders[@]} -eq 0 ]; then
-        error "There is no project."
+        error "プロジェクトが存在しません。"
     fi
 
 
-    echo "Please select a project: "
+    echo "プロジェクトを選択してください: "
     for i in "${!folders[@]}"; do
-        echo "$((i+1))) ${folders[i]}"
+        echo " $((i+1))) ${folders[i]}"
     done
 
 
-    read -p "Please enter number: " choice
+    read -p "番号を入力: " choice
 
 
     if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#folders[@]}" ]; then
         selected_folder="${folders[$((choice-1))]}"
         
         code "$selected_folder"
-        echo -e "\033[1;32mProject $selected_folder started in VSCode.\033[0;39m"
+        echo -e "\033[1;32mプロジェクト $selected_folder をVSCodeで開きました。\033[0;39m"
     else
-        error "Invalid choice."
+        error "無効な選択です。"
     fi
 }
 
 function reset() {
     if [ ! -e ./sandbox.conf ]; then
-        error "There is no \`\033[1;32mconfiguration file\033[0;39m\`."
+        error "\033[1;32msandbox init\033[0;39m を実行して初期設定を行ってください。"
     fi
-    echo "Do you want to reset your settings? [Y/n]"
+    echo "設定をリセットしますか？ [Y/n]"
     read answer
     case $answer in
         "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
         * ) exit 1;;
     esac
     rm -f ./sandbox.conf
-    echo -e "\033[1;34mReset is completed.\033[0;39m"
+    echo -e "\033[1;34mリセットが完了しました。\033[0;39m"
+}
+
+function upgrade() {
+    echo -e "🍺 \033[1;32mbrew upgrade sandbox\033[0;39m を実行しています。"
+    brew upgrade sandbox
+    echo -e "🍺 \033[1;32mbrew upgrade sandbox\033[0;39m の実行が終了しました。"
+}
+
+function uninstall() {
+    echo "本体をHomebrewを使用してアンインストールしますか？ [Y/n]"
+    read answer01
+    case $answer01 in
+        "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
+        * ) exit 1;;
+    esac
+    echo "untapしますか？ [Y/n]"
+    read answer02
+    case $answer02 in
+        "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
+        * ) brew uninstall sandbox; echo -e "👋 \033[1;34msandbox\033[0;39m を削除しました。"; exit 1;;
+    esac
+    brew uninstall sandbox
+    brew untap sakunaga/sandbox
+    echo -e "👋 \033[1;34msandbox\033[0;39m のご利用ありがとうございました！"
 }
 
 cd `dirname $0`
 case $1 in
     usage ) usage ;;
+    info ) info ;;
     init ) init ;;
+    update ) update ;;
     open ) open ;;
     reset ) reset ;;
+    upgrade ) upgrade ;;
+    uninstall ) uninstall ;;
     * ) open ;;
 esac
