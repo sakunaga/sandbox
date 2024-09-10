@@ -6,6 +6,24 @@ function error() {
     exit 1
 }
 
+function mg_init() {
+    echo -e "\033[1;32msandbox init\033[0;39m を実行して初期設定を行ってください。"
+}
+
+function mg_reset() {
+    echo -e "\033[1;32msandbox reset\033[0;39m を実行して設定をリセットしてください。"
+}
+
+function er_init() {
+    read -p "初期設定を行いますか？ [Y/n]: " answer
+    case $answer in
+        "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
+        * ) mg_init;;
+    esac
+    init
+    exit 1
+}
+
 function usage() {
     echo -e "使用方法:"
     echo -e "    \033[1;32msandbox\033[0;39m            ... プロジェクトを開く (省略形)"
@@ -14,14 +32,13 @@ function usage() {
     echo -e "    \033[1;32msandbox open\033[0;39m       ... プロジェクトを開く"
     echo -e "    \033[1;32msandbox info\033[0;39m       ... 設定情報を確認する"
     echo -e "    \033[1;32msandbox reset\033[0;39m      ... 設定をリセットする"
-    echo -e "    \033[1;32msandbox upgrade\033[0;39m      ... 本体を更新する"
-    echo -e "    \033[1;32msandbox uninstall\033[0;39m      ... 本体を削除する"
+    echo -e "    \033[1;32msandbox upgrade\033[0;39m    ... 本体を更新する"
+    echo -e "    \033[1;32msandbox uninstall\033[0;39m  ... 本体を削除する"
 }
 
 function info() {
     if [ ! -e ./sandbox.conf ]; then
-        error "\033[1;32msandbox init\033[0;39m を実行して初期設定を行ってください。"
-        exit 1
+        mg_init; er_init;
     fi
 
     source ./sandbox.conf
@@ -38,16 +55,16 @@ function info() {
 
 function init() {
     if [ -e ./sandbox.conf ]; then
-        error "\033[1;32msandbox reset\033[0;39m を実行して設定をリセットしてください。"
+        mg_reset
+        exit 1
     fi
-    echo -n "プロジェクトディレクトリ: "
-    read dir
+    read -p "プロジェクトディレクトリ: " dir
     expanded_dir="${dir/#\~/$HOME}"
     if [ ! -e "$expanded_dir" ]; then
         mkdir -p "$expanded_dir"
-        echo -e "ディレクトリ「\033[1;32m'$dir'\033[0;39m を作成しました。"
+        echo -e "ディレクトリ「\033[1;32m$dir\033[0;39m」 を作成しました。"
     else
-        echo -e "\033[1;32m$dir\033[0;39m は既にに存在しています。"
+        echo -e "\033[1;32m$dir\033[0;39m は既に存在しています。"
     fi
     echo "created='$(date)'" > ./sandbox.conf
     echo "dir='${dir}'" >> ./sandbox.conf
@@ -56,12 +73,10 @@ function init() {
 
 function update() {
     if [ ! -e ./sandbox.conf ]; then
-        error "\033[1;32msandbox init\033[0;39m を実行して初期設定を行ってください。"
-        exit 1
+        mg_init; er_init;
     fi
 
-    echo "設定をアップデートしますか？ [Y/n]"
-    read answer
+    read -p "設定をアップデートしますか？ [Y/n]: " answer
     case $answer in
         "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
         * ) exit 1;;
@@ -71,8 +86,7 @@ function update() {
     source ./sandbox.conf
 
     echo -e "現在のプロジェクトディレクトリ: \033[1;32m$dir\033[0;39m"
-    echo -n "新しいプロジェクトディレクトリ: "
-    read dir
+    read -p "新しいプロジェクトディレクトリ: " dir
     expanded_dir="${dir/#\~/$HOME}"
 
     if [ ! -e "$expanded_dir" ]; then
@@ -98,7 +112,7 @@ function update() {
 
 function open() {
     if [ ! -e ./sandbox.conf ]; then
-        error "\033[1;32msandbox init\033[0;39m を実行して初期設定を行ってください。"
+        mg_init; er_init;
     fi
     source ./sandbox.conf
     expanded_dir="${dir/#\~/$HOME}"
@@ -133,10 +147,9 @@ function open() {
 
 function reset() {
     if [ ! -e ./sandbox.conf ]; then
-        error "\033[1;32msandbox init\033[0;39m を実行して初期設定を行ってください。"
+        mg_init; er_init;
     fi
-    echo "設定をリセットしますか？ [Y/n]"
-    read answer
+    read -p "設定をリセットしますか？ [Y/n]: " answer
     case $answer in
         "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
         * ) exit 1;;
@@ -152,14 +165,12 @@ function upgrade() {
 }
 
 function uninstall() {
-    echo "本体をHomebrewを使用してアンインストールしますか？ [Y/n]"
-    read answer01
+    read -p "本体をHomebrewを使用してアンインストールしますか？ [Y/n]: " answer01
     case $answer01 in
         "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
         * ) exit 1;;
     esac
-    echo "untapしますか？ [Y/n]"
-    read answer02
+    read -p "untapしますか？ [Y/n]: " answer02
     case $answer02 in
         "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
         * ) rm -f ./sandbox.conf; brew uninstall sandbox; echo -e "👋 \033[1;34msandbox\033[0;39m を削除しました。"; exit 1;;
@@ -172,7 +183,7 @@ function uninstall() {
 
 cd `dirname $0`
 case $1 in
-    usage ) usage ;;
+    -h ) usage ;;
     info ) info ;;
     init ) init ;;
     update ) update ;;
