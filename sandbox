@@ -2,20 +2,23 @@
 
 function error() {
     echo -e "$1"
-    usage
+    commands
     exit 1
 }
 
 function mg_init() {
-    echo -e "\033[1;32msandbox init\033[0;39m を実行して初期設定を行ってください。"
+    # 初期設定をしてください
+    echo -e "Run \033[1;32msandbox init\033[0;39m to perform the initial setup."
 }
 
 function mg_reset() {
-    echo -e "\033[1;32msandbox reset\033[0;39m を実行して設定をリセットしてください。"
+    # リセットしてください
+    echo -e "Run \033[1;32msandbox reset\033[0;39m to reset the settings."
 }
 
 function er_init() {
-    read -p "初期設定を行いますか？ [Y/n]: " answer
+    # 初期設定を行いますか？
+    read -p "Do you want to do the initial setup? [Y/n]: " answer
     case $answer in
         "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
         * ) mg_init;;
@@ -24,16 +27,20 @@ function er_init() {
     exit 1
 }
 
-function usage() {
-    echo -e "使用方法:"
-    echo -e "    \033[1;32msandbox\033[0;39m            ... プロジェクトを開く (省略形)"
-    echo -e "    \033[1;32msandbox init\033[0;39m       ... 初期設定"
-    echo -e "    \033[1;32msandbox update\033[0;39m     ... 設定を更新する"
-    echo -e "    \033[1;32msandbox open\033[0;39m       ... プロジェクトを開く"
-    echo -e "    \033[1;32msandbox info\033[0;39m       ... 設定情報を確認する"
-    echo -e "    \033[1;32msandbox reset\033[0;39m      ... 設定をリセットする"
-    echo -e "    \033[1;32msandbox upgrade\033[0;39m    ... 本体を更新する"
-    echo -e "    \033[1;32msandbox uninstall\033[0;39m  ... 本体を削除する"
+function commands() {
+
+    echo -e "\nOptions:"
+    echo -e "\033[1;32m-h, --help\033[0;39m              display help for command\n"
+
+    echo -e "Commands:"
+    echo -e " \033[1;32msandbox\033[0;39m                open project"
+    echo -e " \033[1;32msandbox init\033[0;39m           initial setup"
+    echo -e " \033[1;32msandbox update\033[0;39m         update settings"
+    echo -e " \033[1;32msandbox open\033[0;39m           open project"
+    echo -e " \033[1;32msandbox info\033[0;39m           check settings"
+    echo -e " \033[1;32msandbox reset\033[0;39m          reset settings"
+    echo -e " \033[1;32msandbox upgrade\033[0;39m        update the main unit"
+    echo -e " \033[1;32msandbox uninstall\033[0;39m      delete the main unit\n"
 }
 
 function info() {
@@ -44,12 +51,12 @@ function info() {
     source ./sandbox.conf
 
     if [ -n "$created" ]; then
-        echo -e "作成時間: \033[1;32m$created\033[0;39m"
+        echo -e "created: \033[1;32m$created\033[0;39m"
     fi
     if [ -n "$updated" ]; then
-        echo -e "最終更新時間: \033[1;32m$updated\033[0;39m"
+        echo -e "updated: \033[1;32m$updated\033[0;39m"
     fi
-    echo -e "プロジェクトディレクトリ: \033[1;32m$dir\033[0;39m"
+    echo -e "project_dir: \033[1;32m$dir\033[0;39m"
 }
 
 
@@ -58,17 +65,17 @@ function init() {
         mg_reset
         exit 1
     fi
-    read -p "プロジェクトディレクトリ: " dir
+    read -p "Project Directory: " dir
     expanded_dir="${dir/#\~/$HOME}"
     if [ ! -e "$expanded_dir" ]; then
         mkdir -p "$expanded_dir"
-        echo -e "ディレクトリ「\033[1;32m$dir\033[0;39m」 を作成しました。"
+        echo -e "Created directory \033[1;32m$dir\033[0;39m."
     else
-        echo -e "\033[1;32m$dir\033[0;39m は既に存在しています。"
+        echo -e "The \033[1;32m$dir\033[0;39m already exists."
     fi
-    echo "created='$(date)'" > ./sandbox.conf
+    echo "created='$(date -Iseconds)'" > ./sandbox.conf
     echo "dir='${dir}'" >> ./sandbox.conf
-    echo -e "\033[1;34m初期設定が完了しました。\033[0;39m"
+    echo -e "\033[1;34mInitial setup is complete.\033[0;39m"
 }
 
 function update() {
@@ -76,7 +83,7 @@ function update() {
         mg_init; er_init;
     fi
 
-    read -p "設定をアップデートしますか？ [Y/n]: " answer
+    read -p "Do you want to update your settings? [Y/n]: " answer
     case $answer in
         "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
         * ) exit 1;;
@@ -85,25 +92,25 @@ function update() {
     # 既存の設定ファイルを読み込む
     source ./sandbox.conf
 
-    echo -e "現在のプロジェクトディレクトリ: \033[1;32m$dir\033[0;39m"
-    read -p "新しいプロジェクトディレクトリ: " dir
+    echo -e "Current Directory: \033[1;32m$dir\033[0;39m"
+    read -p "New Directory: " dir
     expanded_dir="${dir/#\~/$HOME}"
 
     if [ ! -e "$expanded_dir" ]; then
         mkdir -p "$expanded_dir"
-        echo -e "ディレクトリ「\033[1;32m'$dir'\033[0;39m 」を作成しました。"
+        echo -e "Created directory \033[1;32m'$dir'\033[0;39m."
     else
-        echo -e "\033[1;32m$dir\033[0;39m は既に存在しています。"
+        echo -e "The \033[1;32m$dir\033[0;39m already exists."
     fi
 
     # 設定ファイルの更新。createdは既存のものを保持しつつ、dirとupdatedを上書き
     if [ -n "$created" ]; then
         echo "created='${created}'" > ./sandbox.conf
     fi
-    echo "updated='$(date)'" >> ./sandbox.conf
+    echo "updated='$(date -Iseconds)'" >> ./sandbox.conf
     echo "dir='${dir}'" >> ./sandbox.conf
 
-    echo -e "\033[1;34m設定のアップデートが完了しました。\033[0;39m"
+    echo -e "\033[1;34mUpdate of settings has been completed.\033[0;39m"
 }
 
 
@@ -122,26 +129,26 @@ function open() {
 
 
     if [ ${#folders[@]} -eq 0 ]; then
-        error "プロジェクトが存在しません。"
+        error "Project does not exist."
     fi
 
 
-    echo "プロジェクトを選択してください: "
+    echo "Please select a project: "
     for i in "${!folders[@]}"; do
         echo " $((i+1))) ${folders[i]}"
     done
 
 
-    read -p "番号を入力: " choice
+    read -p "Enter a number: " choice
 
 
     if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#folders[@]}" ]; then
         selected_folder="${folders[$((choice-1))]}"
         
         code "$selected_folder"
-        echo -e "\033[1;32mプロジェクト $selected_folder をVSCodeで開きました。\033[0;39m"
+        echo -e "\033[1;32mProject $selected_folder is opened in Visual Studio Code.\033[0;39m"
     else
-        error "無効な選択です。"
+        error "Invalid choice."
     fi
 }
 
@@ -149,41 +156,42 @@ function reset() {
     if [ ! -e ./sandbox.conf ]; then
         mg_init; er_init;
     fi
-    read -p "設定をリセットしますか？ [Y/n]: " answer
+    read -p "Do you want to reset settings? [Y/n]: " answer
     case $answer in
         "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
         * ) exit 1;;
     esac
     rm -f ./sandbox.conf
-    echo -e "\033[1;34mリセットが完了しました。\033[0;39m"
+    echo -e "\033[1;34mReset is complete.\033[0;39m"
 }
 
 function upgrade() {
-    echo -e "🍺 \033[1;32mbrew upgrade sandbox\033[0;39m を実行しています。"
+    echo -e "🍺 Running \033[1;32mbrew upgrade sandbox\033[0;39m."
     brew upgrade sandbox
-    echo -e "🍺 \033[1;32mbrew upgrade sandbox\033[0;39m の実行が終了しました。"
+    echo -e "🍺 Execution of \033[1;32mbrew upgrade sandbox\033[0;39m is complete."
 }
 
 function uninstall() {
-    read -p "本体をHomebrewを使用してアンインストールしますか？ [Y/n]: " answer01
+    read -p "Do you want to uninstall the unit using Homebrew？ [Y/n]: " answer01
     case $answer01 in
         "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
         * ) exit 1;;
     esac
-    read -p "untapしますか？ [Y/n]: " answer02
+    read -p "Do you want to Untap? [Y/n]: " answer02
     case $answer02 in
         "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
-        * ) rm -f ./sandbox.conf; brew uninstall sandbox; echo -e "👋 \033[1;34msandbox\033[0;39m を削除しました。"; exit 1;;
+        * ) rm -f ./sandbox.conf; brew uninstall sandbox; echo -e "👋 Removed \033[1;34msandbox\033[0;39m"; exit 1;;
     esac
     rm -f ./sandbox.conf
     brew uninstall sandbox
     brew untap sakunaga/sandbox
-    echo -e "👋 \033[1;34msandbox\033[0;39m のご利用ありがとうございました！"
+    echo -e "👋 Thank you for using \033[1;34msandbox\033[0;39m"
 }
 
 cd `dirname $0`
 case $1 in
-    -h ) usage ;;
+    -h ) commands ;;
+    --help ) commands ;;
     info ) info ;;
     init ) init ;;
     update ) update ;;
