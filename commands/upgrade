@@ -1,7 +1,0 @@
-#!/bin/bash
-
-function upgrade() {
-    echo -e "🍺 Running \033[1;32mbrew upgrade sandbox\033[0;39m."
-    brew upgrade sandbox
-    echo -e "🍺 Execution of \033[1;32mbrew upgrade sandbox\033[0;39m is complete."
-}

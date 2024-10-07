@@ -1,5 +1,0 @@
-#!/bin/bash
-
-function mg_reset() {
-    echo -e "Run \033[1;32msandbox reset\033[0;39m to reset the settings."
-}

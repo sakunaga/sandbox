@@ -1,5 +1,0 @@
-#!/bin/bash
-
-function mg_init() {
-    echo -e "Run \033[1;32msandbox init\033[0;39m to perform the initial setup."
-}
