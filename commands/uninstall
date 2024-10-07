@@ -1,0 +1,18 @@
+#!/bin/bash
+
+function uninstall() {
+    read -p "Do you want to uninstall the unit using Homebrew？ [Y/n]: " answer01
+    case $answer01 in
+        "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
+        * ) exit 1;;
+    esac
+    read -p "Do you want to Untap? [Y/n]: " answer02
+    case $answer02 in
+        "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
+        * ) rm -f ./sandbox.conf; brew uninstall sandbox; echo -e "👋 Removed \033[1;34msandbox\033[0;39m"; exit 1;;
+    esac
+    rm -f ./sandbox.conf
+    brew uninstall sandbox
+    brew untap sakunaga/sandbox
+    echo -e "👋 Thank you for using \033[1;34msandbox\033[0;39m"
+}

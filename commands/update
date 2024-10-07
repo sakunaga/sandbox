@@ -1,0 +1,34 @@
+#!/bin/bash
+
+function update() {
+    if [ ! -e ./sandbox.conf ]; then
+        mg_init; er_init;
+    fi
+
+    read -p "Do you want to update your settings? [Y/n]: " answer
+    case $answer in
+        "" | "Y" | "y" | "yes" | "Yes" | "YES" ) ;;
+        * ) exit 1;;
+    esac
+
+    source ./sandbox.conf
+
+    echo -e "Current Directory: \033[1;32m$dir\033[0;39m"
+    read -p "New Directory: " dir
+    expanded_dir="${dir/#\~/$HOME}"
+
+    if [ ! -e "$expanded_dir" ]; then
+        mkdir -p "$expanded_dir"
+        echo -e "Created directory \033[1;32m'$dir'\033[0;39m."
+    else
+        echo -e "The \033[1;32m$dir\033[0;39m already exists."
+    fi
+
+    if [ -n "$created" ]; then
+        echo "created='${created}'" > ./sandbox.conf
+    fi
+    echo "updated='$(date -Iseconds)'" >> ./sandbox.conf
+    echo "dir='${dir}'" >> ./sandbox.conf
+
+    echo -e "\033[1;34mUpdate of settings has been completed.\033[0;39m"
+}
