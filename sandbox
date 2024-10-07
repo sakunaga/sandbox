@@ -127,20 +127,21 @@ function open() {
     
     folders=($(find . -maxdepth 1 -type d | sort | sed '1d; s|^\./||'))
 
-
     if [ ${#folders[@]} -eq 0 ]; then
         error "Project does not exist."
     fi
 
+    # 引数がある場合、その番号のプロジェクトを直接開く
+    if [ -n "$1" ] && [[ "$1" =~ ^[0-9]+$ ]]; then
+        choice=$1
+    else
+        echo "Please select a project:"
+        for i in "${!folders[@]}"; do
+            echo " $((i+1))) ${folders[i]}"
+        done
 
-    echo "Please select a project: "
-    for i in "${!folders[@]}"; do
-        echo " $((i+1))) ${folders[i]}"
-    done
-
-
-    read -p "Enter a number: " choice
-
+        read -p "Enter a number: " choice
+    fi
 
     if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#folders[@]}" ]; then
         selected_folder="${folders[$((choice-1))]}"
@@ -195,9 +196,16 @@ case $1 in
     info ) info ;;
     init ) init ;;
     update ) update ;;
-    open ) open ;;
+    open ) 
+        if [ -n "$2" ] && [[ "$2" =~ ^[0-9]+$ ]]; then
+            open "$2"
+        else
+            open
+        fi
+        ;;
     reset ) reset ;;
     upgrade ) upgrade ;;
     uninstall ) uninstall ;;
+    [0-9]* ) open "$1" ;;  # 数字が直接入力された場合
     * ) open ;;
 esac
